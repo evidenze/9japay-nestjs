@@ -297,7 +297,52 @@ NineJaPayModule.register({
 
 ## Error Handling
 
-The SDK automatically handles API errors and converts them to NestJS-friendly exceptions:
+The SDK provides comprehensive error handling with two types of exceptions:
+
+### 1. NineJaPayException (Recommended)
+
+For 9jaPay API errors, the SDK throws `NineJaPayException` which properly maps 9jaPay status codes to HTTP status codes:
+
+```typescript
+import { NineJaPayException } from '9japay-nestjs';
+
+try {
+  const result = await nineJaPayService.createPermanentVirtualAccount({
+    requestReference: 'duplicate-ref',
+    accountName: 'Test Account',
+    autoPayoutEnabled: true,
+  });
+} catch (error) {
+  if (error instanceof NineJaPayException) {
+    console.log('9jaPay Status Code:', error.nineJaPayStatusCode); // "26"
+    console.log('HTTP Status Code:', error.getStatus()); // 409
+    console.log('Message:', error.message); // "Duplicate record found."
+    console.log('Full Response:', error.nineJaPayResponse);
+    
+    // Handle specific 9jaPay errors
+    switch (error.nineJaPayStatusCode) {
+      case '26':
+        // Handle duplicate record
+        console.log('Duplicate record detected');
+        break;
+      case '25':
+        // Handle no record found
+        console.log('Record not found');
+        break;
+      case '09':
+        // Handle validation error
+        console.log('Validation failed');
+        break;
+      default:
+        console.log('Other 9jaPay error');
+    }
+  }
+}
+```
+
+### 2. Standard _9JaPayError
+
+For network errors or other issues:
 
 ```typescript
 try {
@@ -308,21 +353,47 @@ try {
   });
 } catch (error) {
   console.error('Error:', error.message);
-  console.error('Status Code:', error.statusCode);
+  console.error('9jaPay Status Code:', error.nineJaPayStatusCode);
+  console.error('HTTP Status Code:', error.httpStatusCode);
   console.error('Response:', error.response);
+}
+```
+
+### Error Response Structure
+
+When using `NineJaPayException`, the error response structure is:
+
+```typescript
+{
+  statusCode: 409,              // HTTP status code (for proper REST API responses)
+  message: "Duplicate record found.",
+  nineJaPayStatusCode: "26",    // 9jaPay's business logic status code
+  nineJaPayResponse: {          // Full 9jaPay response
+    status: "FAILED",
+    message: "Duplicate record found.",
+    statusCode: "26"
+  }
 }
 ```
 
 ## Response Codes
 
-| Code | Description |
-|------|-------------|
-| 00   | Success |
-| 01   | Processing |
-| 06   | General error |
-| 09   | Validation error |
-| 25   | No record found |
-| 26   | Duplicate record |
+The SDK maps 9jaPay status codes to appropriate HTTP status codes:
+
+| 9jaPay Code | Description | HTTP Status | HTTP Code |
+|-------------|-------------|-------------|-----------|
+| 00 | Success | OK | 200 |
+| 01 | Processing | Accepted | 202 |
+| 06 | General error | Internal Server Error | 500 |
+| 09 | Validation error | Bad Request | 400 |
+| 25 | No record found | Not Found | 404 |
+| 26 | Duplicate record | Conflict | 409 |
+
+### Status Code Usage
+
+- **9jaPay Code**: Used for business logic and specific error handling
+- **HTTP Status**: Used for REST API responses and proper HTTP semantics
+- **Both codes are available** in the `NineJaPayException` for comprehensive error handling
 
 ## Development
 
@@ -368,6 +439,16 @@ For support and questions:
 - Check the [9jaPay API Documentation](https://docs.9japay.com/docs/intro)
 
 ## Changelog
+
+### v1.0.2
+- **Enhanced Error Handling**: Added `NineJaPayException` class with proper HTTP status code mapping
+- **Fixed Status Code Conflict**: Separated 9jaPay status codes from HTTP status codes to prevent `ERR_HTTP_INVALID_STATUS_CODE`
+- **Improved Error Structure**: Better error response format with both business logic and HTTP codes
+- **Status Code Mapping**: Automatic mapping of 9jaPay codes (e.g., "26") to appropriate HTTP codes (e.g., 409)
+
+### v1.0.1
+- **Global Module**: Made module global to resolve dependency injection issues
+- **Fix**: Service now available throughout application without additional imports
 
 ### v1.0.0
 - Initial release
