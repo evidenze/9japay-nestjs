@@ -8,6 +8,7 @@ export class _9JaPayModule {
   static register(config: _9JaPayConfig): DynamicModule {
     return {
       module: _9JaPayModule,
+      global: true,
       providers: [
         {
           provide: NINE_JA_PAY_CONFIG,
@@ -25,6 +26,7 @@ export class _9JaPayModule {
   }): DynamicModule {
     return {
       module: _9JaPayModule,
+      global: true,
       providers: [
         {
           provide: NINE_JA_PAY_CONFIG,
