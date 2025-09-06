@@ -33,6 +33,7 @@ import {
   SimulateDepositRequest,
 } from '../interfaces';
 import { NINE_JA_PAY_CONFIG } from '../constants';
+import { NineJaPayException } from '../exceptions/nine-ja-pay.exception';
 
 @Injectable()
 export class _9JaPayService {
@@ -61,11 +62,23 @@ export class _9JaPayService {
     this.httpClient.interceptors.response.use(
       (response) => response,
       (error: AxiosError<any>) => {
-        const responseData = error.response?.data as any;
+        const responseData = error.response?.data as _9JaPayResponse;
+        
+        // If we have a 9jaPay error response, throw our custom exception
+        if (responseData && responseData.statusCode) {
+          throw new NineJaPayException(
+            responseData.statusCode,
+            responseData,
+            error.response?.status
+          );
+        }
+        
+        // For other errors, create a standard _9JaPayError
         const nineJaPayError: _9JaPayError = new Error(
           responseData?.message || error.message
         );
-        nineJaPayError.statusCode = responseData?.statusCode;
+        nineJaPayError.nineJaPayStatusCode = responseData?.statusCode;
+        nineJaPayError.httpStatusCode = error.response?.status;
         nineJaPayError.response = responseData;
         throw nineJaPayError;
       }

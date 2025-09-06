@@ -192,6 +192,7 @@ export interface _9JaPayConfig {
 
 // Error interfaces
 export interface _9JaPayError extends Error {
-  statusCode?: string;
+  nineJaPayStatusCode?: string; // 9jaPay's status code (e.g., "26", "01", etc.)
+  httpStatusCode?: number; // HTTP status code (e.g., 400, 500, etc.)
   response?: _9JaPayResponse;
 }
