@@ -1,6 +1,6 @@
 {
   "name": "9japay-nestjs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A comprehensive NestJS SDK for integrating with 9jaPay Virtual Account APIs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
