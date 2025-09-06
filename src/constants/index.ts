@@ -1,0 +1,1 @@
+export const NINE_JA_PAY_CONFIG = '9JA_PAY_CONFIG';
